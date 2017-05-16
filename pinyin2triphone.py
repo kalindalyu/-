@@ -10,7 +10,11 @@ import os,sys,string
 
 
 sentence = 'wo3 ai4 bei3 jing1 tian1 an1 men2'
-class_initial_bilabial = ['b','p', 'm']
+class_initial_bilabial = ['b','p','m']
+class_initial_k_dental = ['f']
+class_initial_dental = ['z','s','c']
+class_initial_alveolar = ['d','t','n','l']
+class_initial_
 
 
 
