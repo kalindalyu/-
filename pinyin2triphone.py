@@ -8,8 +8,8 @@ created on May 14th
 from collections import OrderedDict
 import os,sys,string
 
-
-sentence = 'wo3 ai4 bei3 jing1 tian1 an1 men2'
+ 
+# sentence = 'wo3 ai4 bei3 jing1 tian1 an1 men2'
 initialList = ['b','p','m','f','z','s','c','d','t','n','l','zh', 'ch','sh','r', \
 'zh', 'ch','sh','r','j','q','x','g','k','h']
 finalList = ['a', 'ia', 'ua', 'e','ie','ve','ai','ei','uai','ui','i','Qi','Pi', \
@@ -30,22 +30,16 @@ class_final_nasal = ['an','ian','uan','van','en','in','uen','vn','ang', \
 'iang','uang','eng','ing','ueng','ong','iong']
 
 def read_file_list(file_name):
+    source_corpus_List = []
     fid = open(file_name)
     for line in fid.readlines():
-        sentence = line.strip()
+        line = line.strip()
         if len(line) < 1:
             continue
+        else:
+            source_corpus_List.append(line)
     fid.close()
-    return sentence
-
-def prepare_file_path_list(file_id_list, file_dir, file_extension, new_dir_switch=True):
-    if not os.path.exists(file_dir) and new_dir_switch:
-        os.makedirs(file_dir)
-    file_name_list = []
-    for file_id in file_id_list:
-        file_name = file_dir + '/' + file_id + file_extension
-        file_name_list.append(file_name)
-    return  file_name_list
+    return source_corpus_List
 
 def loadDict(syfile):
     syDict = OrderedDict()
@@ -143,21 +137,69 @@ def create_one_sentence_features(trans_phonemeList, toneList):
             exit
     return triple_mono_List
 
-def create_features_corpus(file):  
+def create_full_features(source_corpus_List): ## calculate uniq triples and their numbers 
+    triple_full_List = []
+    for sentence in source_corpus_List:
+        trans_phonemeList,toneList = phoneme2segment(sentence,syDict)
+        triple_mono_List = create_one_sentence_features(trans_phonemeList, toneList)
+        for triple in triple_mono_List:
+            if triple not in triple_full_List:
+                triple_full_List.append(triple)
+            else:
+                pass 
+                '''
+            if triple not in triple_mono_List:
+                triple_full_dict[triple] = 1 
+            else:
+                triple_full_dict[triple] += 1 
+            '''
+    return triple_full_List
 
-    triple_mono_List = create_one_sentence_features(trans_phonemeList, toneList)
-    triple_mono_List 
+def greedy_selection(source_corpus_List,target_corpus_List,triple_target_List):
+    sentence_score_dict = {}
+    for sentence in source_corpus_List:
+        trans_phonemeList,toneList = phoneme2segment(sentence,syDict)
+        triple_mono_List = create_one_sentence_features(trans_phonemeList, toneList)
+        L = len(triple_mono_List) # the number of triples in one sentence 
+        triple_new_mono_List = []
+        #print triple_target_List
+        for triple in triple_mono_List: 
+            if triple not in triple_target_List:
+                triple_new_mono_List.append(triple)
+            else:
+                pass
+        triple_target_List.extend(triple_new_mono_List)
+        #print triple_target_List
+         # K is the number of new units in the sentence acccording to the target corpus
+        K = len(triple_new_mono_List) 
+        print  L,K
+        p = float(K)/float(L) ##
+        sentence_score_dict[sentence] = p 
+    print sentence_score_dict
+    best_sentence = max(sentence_score_dict, key=sentence_score_dict.get) 
+    print best_sentence
+    source_corpus_List.remove(best_sentence)
+    target_corpus_List.append(best_sentence)
+
+    return source_corpus_List, target_corpus_List, triple_target_List
+
+
+syDict = loadDict('syd.dict')
+source_corpus_List = read_file_list('sentence.txt')
+
+triple_full_List = create_full_features(source_corpus_List)
+target_corpus_List = []
+triple_target_List = []
+
+while (len(triple_target_List) != len(triple_full_List)):
+    source_corpus_List, target_corpus_List, triple_target_List = greedy_selection(source_corpus_List,target_corpus_List,triple_target_List)
+
+
     
 
 
 
 
-        
-syDict = loadDict('syd.dict')
-trans_phonemeList,toneList = phoneme2segment(sentence,syDict)
-triple_mono_List = create_one_sentence_features(trans_phonemeList, toneList)
-print triple_mono_List
-print trans_phonemeList
 
 
 
